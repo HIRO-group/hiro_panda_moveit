@@ -1,0 +1,1 @@
+# MoveIt! Sample of the Panda Robot

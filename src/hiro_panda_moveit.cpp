@@ -21,8 +21,8 @@ HiroPanda::HiroPanda(string name, string group) : n(name), spinner(8), PLANNING_
     move_group.setPlannerId("RRTConnectkConfigDefault");
     move_group.setNumPlanningAttempts(16);
     move_group.setPlanningTime(10);
-    move_group.setMaxAccelerationScalingFactor(0.5);
-    move_group.setMaxVelocityScalingFactor(0.5);
+    move_group.setMaxAccelerationScalingFactor(0.4);
+    move_group.setMaxVelocityScalingFactor(0.4);
 
     ROS_INFO("Reference frame: %s", move_group.getPlanningFrame().c_str());
     ROS_INFO("End effector link: %s", move_group.getEndEffectorLink().c_str());
@@ -43,7 +43,10 @@ bool HiroPanda::wait(ros::Duration _timeout)
     while(ros::ok())
     {
         ROS_DEBUG("Waiting...");
-        if (ros::Time::now() - start > _timeout) { return true; };
+        if (ros::Time::now() - start > _timeout)
+        {
+            return true;
+        }
 
         r.sleep();
     }

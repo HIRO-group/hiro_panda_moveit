@@ -37,7 +37,7 @@ private:
     void errorRecoverCb(const std_msgs::Empty& msg);
     void gripperCmdCb(const std_msgs::String& msg);
 public:
-    HiroPanda(std::string name, std::string group = "panda_arm_hand");
+    HiroPanda(std::string name, std::string group = "panda_arm");
     ~HiroPanda();
 
     // gripper functions

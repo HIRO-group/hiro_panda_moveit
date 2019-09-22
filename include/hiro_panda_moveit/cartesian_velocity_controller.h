@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include <geometry_msgs/Twist.h>
 #include <controller_interface/multi_interface_controller.h>
 #include <franka_hw/franka_cartesian_command_interface.h>
 #include <franka_hw/franka_state_interface.h>
@@ -29,6 +30,9 @@ private:
     franka_hw::FrankaVelocityCartesianInterface *velocity_cartesian_interface_;
     std::unique_ptr<franka_hw::FrankaCartesianVelocityHandle> velocity_cartesian_handle_;
     ros::Duration elapsed_time_;
+    geometry_msgs::Twist _target;
+    ros::Subscriber sub_target_vel;
+    void targetVelCb(const geometry_msgs::Twist& target);
 };
 
 } // namespace hiro_panda_moveit

@@ -1,0 +1,7 @@
+<library path="lib/libhiro_panda_controllers">
+  <class name="hiro_panda_moveit/CartesianVelocityController" type="hiro_panda_moveit::CartesianVelocityController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      A controller that executes motions based on cartesian velocities
+    </description>
+  </class>
+</library>

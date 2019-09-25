@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <array>
 
 #include <geometry_msgs/Twist.h>
 #include <controller_interface/multi_interface_controller.h>
@@ -12,6 +13,7 @@
 #include <hardware_interface/robot_hw.h>
 #include <ros/node_handle.h>
 #include <ros/time.h>
+#include <franka/rate_limiting.h>
 
 namespace hiro_panda_moveit
 {
@@ -29,9 +31,12 @@ public:
 private:
     franka_hw::FrankaVelocityCartesianInterface *velocity_cartesian_interface_;
     std::unique_ptr<franka_hw::FrankaCartesianVelocityHandle> velocity_cartesian_handle_;
+    std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
     ros::Duration elapsed_time_;
     geometry_msgs::Twist _target;
     ros::Subscriber sub_target_vel;
+    std::array<double, 6> last_O_dP_EE_c;
+    std::array<double, 6> last_O_ddP_EE_c;
     void targetVelCb(const geometry_msgs::Twist& target);
 };
 

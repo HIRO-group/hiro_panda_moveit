@@ -49,10 +49,21 @@ bool CartesianVelocityController::init(hardware_interface::RobotHW *robot_hardwa
         return false;
     }
 
-    auto state_interface = robot_hardware->get<franka_hw::FrankaStateInterface>();
+    auto *state_interface = robot_hardware->get<franka_hw::FrankaStateInterface>();
     if (state_interface == nullptr)
     {
         ROS_ERROR("CartesianVelocityController: Could not get state interface from hardware");
+        return false;
+    }
+    try
+    {
+        state_handle_ = std::make_unique<franka_hw::FrankaStateHandle>(state_interface->getHandle(arm_id + "_robot"));
+    }
+    catch (hardware_interface::HardwareInterfaceException &ex)
+    {
+        ROS_ERROR_STREAM(
+            "CartesianImpedanceExampleController: Exception getting state handle from interface: "
+            << ex.what());
         return false;
     }
 
@@ -67,6 +78,8 @@ void CartesianVelocityController::starting(const ros::Time & /* time */)
     _target.linear.x = 0.0;
     _target.linear.y = 0.0;
     _target.linear.z = 0.0;
+    last_O_dP_EE_c.fill(0);
+    last_O_ddP_EE_c.fill(0);
 }
 
 void CartesianVelocityController::update(const ros::Time & /* time */,
@@ -74,7 +87,18 @@ void CartesianVelocityController::update(const ros::Time & /* time */,
 {
     std::array<double, 6> command = {{_target.linear.x, _target.linear.y, _target.linear.z,
                                       _target.angular.x, _target.angular.y, _target.angular.z}};
-    velocity_cartesian_handle_->setCommand(command);
+    std::array<double, 6> limited_command =
+        franka::limitRate(franka::kMaxTranslationalVelocity,
+                          franka::kMaxTranslationalAcceleration,
+                          franka::kMaxTranslationalJerk,
+                          franka::kMaxRotationalVelocity,
+                          franka::kMaxRotationalAcceleration,
+                          franka::kMaxRotationalJerk,
+                          command, last_O_dP_EE_c, last_O_ddP_EE_c);
+    velocity_cartesian_handle_->setCommand(limited_command);
+    franka::RobotState robot_state = state_handle_->getRobotState();
+    last_O_dP_EE_c = robot_state.O_dP_EE_c;
+    last_O_ddP_EE_c = robot_state.O_ddP_EE_c;
 }
 
 void CartesianVelocityController::stopping(const ros::Time & /*time*/)

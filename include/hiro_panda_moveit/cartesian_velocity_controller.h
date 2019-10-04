@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <array>
+#include <iostream>
 
 #include <geometry_msgs/Twist.h>
 #include <controller_interface/multi_interface_controller.h>
@@ -37,6 +38,7 @@ private:
     ros::Subscriber sub_target_vel;
     std::array<double, 6> last_O_dP_EE_c;
     std::array<double, 6> last_O_ddP_EE_c;
+    double acceleration_scale;
     void targetVelCb(const geometry_msgs::Twist& target);
 };
 

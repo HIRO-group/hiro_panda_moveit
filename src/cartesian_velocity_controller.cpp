@@ -13,12 +13,24 @@
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
 
+using namespace std;
+
 namespace hiro_panda_moveit
 {
 
 bool CartesianVelocityController::init(hardware_interface::RobotHW *robot_hardware,
                                        ros::NodeHandle &node_handle)
 {
+    double acceleration_scale_param = 0.1;
+    node_handle.getParam("/hiro/acceleration_scale", acceleration_scale_param);
+    if (acceleration_scale_param > 0 && acceleration_scale_param < 1)
+    {
+        acceleration_scale = acceleration_scale_param;
+    }
+    else
+    {
+        acceleration_scale = 0.1;
+    }
     sub_target_vel = node_handle.subscribe("/hiro/vel_cmd", 10, &CartesianVelocityController::targetVelCb, this,
                                            ros::TransportHints().reliable().tcpNoDelay());
 
@@ -89,10 +101,10 @@ void CartesianVelocityController::update(const ros::Time & /* time */,
                                       _target.angular.x, _target.angular.y, _target.angular.z}};
     std::array<double, 6> limited_command =
         franka::limitRate(franka::kMaxTranslationalVelocity,
-                          franka::kMaxTranslationalAcceleration,
+                          franka::kMaxTranslationalAcceleration * acceleration_scale,
                           franka::kMaxTranslationalJerk,
                           franka::kMaxRotationalVelocity,
-                          franka::kMaxRotationalAcceleration,
+                          franka::kMaxRotationalAcceleration * acceleration_scale,
                           franka::kMaxRotationalJerk,
                           command, last_O_dP_EE_c, last_O_ddP_EE_c);
     velocity_cartesian_handle_->setCommand(limited_command);

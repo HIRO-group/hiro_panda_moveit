@@ -13,3 +13,6 @@ The repository to manipulate Panda robot powered by MoveIt!.
 
 * **/hiro/panda/target**: move the robot to target position in Cartesian space
     * example: `rostopic pub -1 /hiro/panda/target geometry_msgs/Pose "{position:{ x: -0.48, y: -0.16, z: 0.40}, orientation:{ x: 1.0, y: 0.0, z: 0.0, w: 0.0}}"`
+
+* **/hiro/panda/vel_cmd**: Send Cartesian Velocity command to the robot
+    * example: `rostopic pub -1 /hiro/panda/cmd_vel     geometry_msgs/Twist "{linear:{ x:0.0, y: 0.0, z: 0.01}, angular:{ x: 0.0, y: 0.0, z: 0.0}}"`

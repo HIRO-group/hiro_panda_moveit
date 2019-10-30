@@ -8,6 +8,7 @@ from sensor_msgs.msg import JointState
 pub_vel = rospy.Publisher('/hiro/vel_cmd', Twist, queue_size=1)
 pub_grasp = rospy.Publisher('/franka_gripper/grasp/goal', GraspActionGoal, queue_size=1)
 
+
 def stop():
     global pub_vel
     global pub_grasp
@@ -56,7 +57,7 @@ def pub_vel_cmd():
         g.goal.speed = 0.2
         g.goal.force = 0.1
         pub_grasp.publish(g)
-        rospy.rostime.wallsleep(1)
+        rospy.rostime.wallsleep(3)
 
 
 if __name__ == '__main__':

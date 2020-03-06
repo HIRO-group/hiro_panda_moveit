@@ -11,9 +11,6 @@ from std_msgs.msg import Int16
 pub_vel = rospy.Publisher('/hiro/vel_cmd', Twist, queue_size=1)
 pub_grasp = rospy.Publisher('/franka_gripper/grasp/goal', GraspActionGoal, queue_size=1)
 
-global ee_x
-global ee_y
-global ee_z
 ee_x = 0
 ee_y = 0
 ee_z = 0
@@ -45,6 +42,8 @@ def euclidianDist(waypoint):
     d = [waypoint[0]-ee_x, waypoint[1]-ee_y, waypoint[2]-ee_z]
     return np.sqrt(np.dot(d,d))
 
+
+
 def getPosition(pos):
     # print(pos.position[0], pos.position[1])
     pass
@@ -53,14 +52,19 @@ def updateEEPosition(state):
     global ee_x
     global ee_y
     global ee_z
-    
+
+    # Base position w.r.t world 
     base_position = np.array([[0], [0], [0], [1.0]])
+    # Convert franka_msgs/FrankaState.0_T_EE to np.array of size (4,4)
     OTEE = [i for i in state.O_T_EE]
-    base_to_EE_rotation_matrix = np.array([[OTEE[0], OTEE[4], OTEE[8],  OTEE[12]], 
+    base_to_EE_transformation_matrix = np.array([[OTEE[0], OTEE[4], OTEE[8],  OTEE[12]], 
                                            [OTEE[1], OTEE[5], OTEE[9],  OTEE[13]],
                                            [OTEE[2], OTEE[6], OTEE[10], OTEE[14]],
                                            [OTEE[3], OTEE[7], OTEE[11], OTEE[15]]])
-    EE_position =  np.dot(base_to_EE_rotation_matrix, base_position)
+    # Get position vector of EE w.r.t. world.
+    # This could also be done taking the last column of base_to_EE_transformation_matrix, equivalent in this case.
+
+    EE_position =  np.dot(base_to_EE_transformation_matrix, base_position)
 
     ee_x = EE_position[0][0]
     ee_y = EE_position[1][0]
@@ -84,9 +88,6 @@ def pub_vel_cmd():
     global pub_vel
     global pub_grasp
     
-    #TODO: Subscribe to proximity sensor
-    #TODO: Callback that updates global proximity vector
-    #TODO: Apply force as velocity to end-effector
     #TODO: Script publishing fake distances
     #TODO: Test Case: X force 
 
@@ -102,7 +103,6 @@ def pub_vel_cmd():
                           [0.6070476, 0.14861584, 0.19329099],
                           [.607105898, .000161195619, .486516718]])
 
-    direction = 1
     vel = 0.25
     waypoint_idx = 0
     while not rospy.is_shutdown():
@@ -114,32 +114,37 @@ def pub_vel_cmd():
         t.angular.z = 0
 
         
-        
+        # Euclidean distance from EE position to the current objective waypoint
         dist = euclidianDist(waypoints[waypoint_idx])
+        # If the computed distance is close enough to the current objective waypoint jump to the next waypoint
         if dist < 0.01:
-            waypoint_idx = (waypoint_idx + 1) % 6
-        print('dist',dist)
+            waypoint_idx = (waypoint_idx + 1) % len(waypoints)
+        print('Distance to the the current objective waypoint is: ',dist)
         
-        cur_pos = np.array([ee_x,ee_y,ee_z])
+        cur_pos = np.array([ee_x, ee_y, ee_z])
         
+        # Compute the unit vector pointing from the current position towards the current objective waypoint 
         unitVec = np.subtract(waypoints[waypoint_idx],cur_pos)/dist
-        print('unitVec',unitVec)
+        print('Unit vector: ',unitVec)
         
+        # Computing the velocity vector
         S = np.sum(np.abs(unitVec))
         velVec = (unitVec/S)*vel 
-        print('velVec',velVec)
+        print('Velocity vector: ',velVec)
+
+        # x_add is the modification of the x component of the velocity vector in the world x direction
         x_add = 0
         if not x_prox == -1 and ee_x > 0.3:
             print('x_prox', x_prox)
             ratio = (500.0 - x_prox)/500.0
-            print(ratio)
+            print('Danger ratio: ', ratio)
             x_add = 0.2 * ratio
 
-        
         t.linear.x = velVec[0] - x_add
         t.linear.y = velVec[1] 
         t.linear.z = velVec[2]
 
+        # Publish computed Twist 
         pub_vel.publish(t)
 
         rospy.rostime.wallsleep(0.01)

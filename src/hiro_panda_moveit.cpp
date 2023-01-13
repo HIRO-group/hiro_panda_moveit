@@ -1,7 +1,7 @@
 #include <hiro_panda_moveit/hiro_panda_moveit.h>
 #include <ros/package.h>
 
-#include <franka_control/ErrorRecoveryActionGoal.h>
+#include <franka_msgs/ErrorRecoveryActionGoal.h>
 #include <franka_gripper/MoveActionGoal.h>
 #include <franka_gripper/GraspActionGoal.h>
 
@@ -16,7 +16,7 @@ HiroPanda::HiroPanda(string name, string group) : n(name), spinner(8), PLANNING_
     sub_move_target = n.subscribe("/hiro/panda/target", 1, &HiroPanda::targetCb, this);
     sub_error_recover = n.subscribe("/hiro/panda/error_recover", 1, &HiroPanda::errorRecoverCb, this);
     sub_gripper_cmd = n.subscribe("/hiro/panda/gripper_cmd", 1, &HiroPanda::gripperCmdCb, this);
-    pub_error_recover = n.advertise<franka_control::ErrorRecoveryActionGoal>("/franka_control/error_recovery/goal", 1);
+    pub_error_recover = n.advertise<franka_msgs::ErrorRecoveryActionGoal>("/franka_control/error_recovery/goal", 1);
     pub_gripper_width = n.advertise<franka_gripper::GraspActionGoal>("/franka_gripper/grasp/goal", 1);
 
     move_group.setPlannerId("RRTConnectkConfigDefault");
@@ -76,7 +76,7 @@ void HiroPanda::targetCb(const geometry_msgs::Pose& msg)
 
 void HiroPanda::errorRecoverCb(const std_msgs::Empty& msg)
 {
-    franka_control::ErrorRecoveryActionGoal recover_msg;
+    franka_msgs::ErrorRecoveryActionGoal recover_msg;
     pub_error_recover.publish(recover_msg);
 }
 
